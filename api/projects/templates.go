@@ -7,6 +7,8 @@ import (
 	"github.com/gorilla/context"
 	"net/http"
 	"strconv"
+	"os"
+	"net/url"
 )
 
 // TemplatesMiddleware ensures a template exists and loads it to the context
@@ -59,6 +61,113 @@ func GetTemplates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helpers.WriteJSON(w, http.StatusOK, templates)
+}
+
+// GetInventoryContents returns text of inventory
+func GetInventoryContents(w http.ResponseWriter, r *http.Request) {
+	template := context.Get(r, "template").(db.Template)
+	inventory, err := helpers.Store(r).GetInventory(template.ProjectID, template.InventoryID)
+
+	if err != nil {
+		helpers.WriteError(w, err)
+		return
+	}
+
+	if (inventory.Type == "file") {
+		repository, err := helpers.Store(r).GetRepository(template.ProjectID, template.RepositoryID)
+		if err != nil {
+		        helpers.WriteError(w, err)
+			return
+		}
+
+		fileUrl, _ := url.Parse(repository.GitURL + inventory.Inventory)
+		contents, _ := os.ReadFile(fileUrl.Path)
+		helpers.WriteJSON(w, http.StatusOK, string(contents))
+	} else if (inventory.Type == "static") {
+		contents := inventory.Inventory
+		helpers.WriteJSON(w, http.StatusOK, contents)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+// PutInventoryContents creates or updates an inventory
+func PutInventoryContents(w http.ResponseWriter, r *http.Request) {
+	template := context.Get(r, "template").(db.Template)
+	inventory, err := helpers.Store(r).GetInventory(template.ProjectID, template.InventoryID)
+
+	if err != nil {
+		helpers.WriteError(w, err)
+		return
+	}
+
+	var host db.Host
+	if !helpers.Bind(w, r, &host) {
+		return
+	}
+
+	contents := "[normal_framework]\n"+host.Name+" ansible_host=" + host.Ip + "\n\n[all:vars]\nansible_python_interpreter=/usr/bin/python3\n"
+
+	if (inventory.Type == "file") {
+		 repository, err := helpers.Store(r).GetRepository(template.ProjectID, template.RepositoryID)
+		 if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+
+		fileUrl, _ := url.Parse(repository.GitURL + inventory.Inventory)
+		err = os.WriteFile(fileUrl.Path, []byte(contents), 0644)
+		if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	} else if (inventory.Type == "static") {
+		inventory.Inventory = contents
+		err := helpers.Store(r).UpdateInventory(inventory)
+		if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+// DeleteInventoryContents delete an inventory
+func DeleteInventoryContents(w http.ResponseWriter, r *http.Request) {
+	template := context.Get(r, "template").(db.Template)
+	inventory, err := helpers.Store(r).GetInventory(template.ProjectID, template.InventoryID)
+
+	if err != nil {
+		helpers.WriteError(w, err)
+		return
+	}
+
+	if (inventory.Type == "file") {
+		repository, err := helpers.Store(r).GetRepository(template.ProjectID, template.RepositoryID)
+		if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+
+		fileUrl, _ := url.Parse(repository.GitURL + inventory.Inventory)
+		err = os.Remove(fileUrl.Path)
+		if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	} else if (inventory.Type == "static") {
+		inventory.Inventory = ""
+		err := helpers.Store(r).UpdateInventory(inventory)
+		if err != nil {
+			helpers.WriteError(w, err)
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 // AddTemplate adds a template to the database

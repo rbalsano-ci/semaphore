@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import Provisioning from '../views/project/Provisioning.vue';
 import History from '../views/project/History.vue';
 import Activity from '../views/project/Activity.vue';
 import Settings from '../views/project/Settings.vue';
@@ -24,6 +25,10 @@ const routes = [
   {
     path: '/project/:projectId',
     redirect: '/project/:projectId/history',
+  },
+  {
+    path: '/project/:projectId/provisioning',
+    component: Provisioning,
   },
   {
     path: '/project/:projectId/history',

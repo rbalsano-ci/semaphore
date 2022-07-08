@@ -107,7 +107,7 @@
         dark
         :color="darkMode ? '#003236' : '#005057'"
         fixed
-        width="260"
+        width="300"
         v-model="drawer"
         mobile-breakpoint="960"
         v-if="$route.path.startsWith('/project/')"
@@ -196,6 +196,16 @@
                 <li>You have read-only access</li>
               </ul>
             </v-alert>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item key="provisioning" :to="`/project/${projectId}/provisioning`">
+          <v-list-item-icon>
+            <v-icon>mdi-book-open-blank-variant</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>
+            <v-list-item-title>Normal Framework Provisioning</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
@@ -771,6 +781,7 @@ export default {
     async onTaskLogDialogClosed() {
       const query = { ...this.$route.query, t: undefined };
       await this.$router.replace({ query });
+      EventBus.$emit('i-task-log-closed', { closed: true });
     },
 
     async loadData() {

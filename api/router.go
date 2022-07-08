@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ansible-semaphore/semaphore/api/network"
 	"github.com/ansible-semaphore/semaphore/api/projects"
 	"github.com/ansible-semaphore/semaphore/api/sockets"
 	"github.com/ansible-semaphore/semaphore/util"
@@ -199,6 +200,14 @@ func Route() *mux.Router {
 	projectTmplManagement.HandleFunc("/{template_id}/tasks", projects.GetAllTasks).Methods("GET")
 	projectTmplManagement.HandleFunc("/{template_id}/tasks/last", projects.GetLastTasks).Methods("GET")
 	projectTmplManagement.HandleFunc("/{template_id}/schedules", projects.GetTemplateSchedules).Methods("GET")
+	projectTmplManagement.HandleFunc("/{template_id}/inventory_contents", projects.GetInventoryContents).Methods("GET")
+	projectTmplManagement.HandleFunc("/{template_id}/inventory_contents", projects.PutInventoryContents).Methods("PUT")
+	projectTmplManagement.HandleFunc("/{template_id}/inventory_contents", projects.DeleteInventoryContents).Methods("DELETE")
+	projectTmplManagement.HandleFunc("/{template_id}/pki", projects.GetAllPki).Methods("GET")
+	projectTmplManagement.HandleFunc("/{template_id}/pki/{mac_address}", projects.GetPki).Methods("GET")
+	projectTmplManagement.HandleFunc("/{template_id}/pki/{mac_address}", projects.UpdatePki).Methods("POST")
+	projectTmplManagement.HandleFunc("/{template_id}/pki/{mac_address}", projects.DeletePki).Methods("DELETE")
+	projectTmplManagement.HandleFunc("/{template_id}/pki/{mac_address}/{file_name}", projects.DeletePkiFile).Methods("DELETE")
 
 	projectTaskManagement := projectUserAPI.PathPrefix("/tasks").Subrouter()
 	projectTaskManagement.Use(projects.GetTaskMiddleware)
@@ -220,6 +229,12 @@ func Route() *mux.Router {
 	projectViewManagement.HandleFunc("/{view_id}", projects.UpdateView).Methods("PUT")
 	projectViewManagement.HandleFunc("/{view_id}", projects.RemoveView).Methods("DELETE")
 	projectViewManagement.HandleFunc("/{view_id}/templates", projects.GetViewTemplates).Methods("GET", "HEAD")
+
+	networkView := authenticatedAPI.PathPrefix("/network").Subrouter()
+	networkView.HandleFunc("/ip/{mac_address}", network.GetIpAddress).Methods("GET")
+	networkView.HandleFunc("/mac/{ip_address}", network.GetMacAddress).Methods("GET")
+	networkView.HandleFunc("/local_hosts", network.GetLocalHosts).Methods("GET")
+	networkView.HandleFunc("/primary_ip_address", network.GetPrimaryIpAddress).Methods("GET")
 
 	if os.Getenv("DEBUG") == "1" {
 		defer debugPrintRoutes(r)
