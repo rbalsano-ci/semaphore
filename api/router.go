@@ -235,6 +235,7 @@ func Route() *mux.Router {
 	networkView.HandleFunc("/mac/{ip_address}", network.GetMacAddress).Methods("GET")
 	networkView.HandleFunc("/local_hosts", network.GetLocalHosts).Methods("GET")
 	networkView.HandleFunc("/primary_ip_address", network.GetPrimaryIpAddress).Methods("GET")
+	networkView.HandleFunc("/prepare_ssh/{ip_address}", network.ReplaceKnownHostEntry).Methods("GET")
 
 	if os.Getenv("DEBUG") == "1" {
 		defer debugPrintRoutes(r)

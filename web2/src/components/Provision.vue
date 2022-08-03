@@ -373,6 +373,10 @@ export default {
 
     async provision() {
       try {
+        (await axios({
+          method: 'get',
+          url: `/api/network/prepare_ssh/${this.ipAddress}`,
+        }));
         const response = (await axios({
           method: 'post',
           url: `/api/project/${this.projectId}/tasks`,
