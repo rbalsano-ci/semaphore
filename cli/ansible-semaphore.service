@@ -1,0 +1,13 @@
+[Unit]
+Description=Ansible GUI
+After=network.target
+
+[Service]
+Type=simple
+User=cortex
+Group=cortex
+WorkingDirectory=/home/cortex/go/src/github.com/ansible-semaphore/semaphore
+ExecStart=/usr/local/go/bin/go run cli/main.go service --config ./config.json
+
+[Install]
+WantedBy=multi-user.target
