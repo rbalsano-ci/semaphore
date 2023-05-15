@@ -106,7 +106,7 @@ func PutInventoryContents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contents := "[normal_framework]\n"+host.Name+" ansible_host=" + host.Ip + "\n\n[all:vars]\nansible_python_interpreter=/usr/bin/python3\n"
+	contents := "[cortex_connect]\n"+host.Name+" ansible_host=" + host.Ip + "\n\n[all:vars]\nansible_python_interpreter=/usr/bin/python3\n"
 
 	if (inventory.Type == "file") {
 		 repository, err := helpers.Store(r).GetRepository(template.ProjectID, template.RepositoryID)
